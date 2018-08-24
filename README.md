@@ -1,1 +1,3 @@
-"# scientist" 
+"# scientist bot" 
+
+![](./scientist.png)
