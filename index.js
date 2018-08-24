@@ -4,6 +4,7 @@ global.lodash = require('lodash');
 global.promise = require('bluebird');
 global.request = require('request-promise');
 var os = require('os');
+var inMemoryStorage = new builder.MemoryBotStorage();
 require('dotenv').config()
 
 // Cognitive Service Clients.
@@ -53,7 +54,7 @@ const recognizer = new builder.LuisRecognizer(LUIS_MODEL);
 // Create our bot to listen in on the chat connector.
 global.bot = new builder.UniversalBot(connector, (session) => {
     session.beginDialog('scibot:search')
-});
+}).set('storage', inMemoryStorage);;
 
 bot.recognizer(recognizer);
 
