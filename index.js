@@ -10,6 +10,7 @@ require('dotenv').config()
 // Cognitive Service Clients.
 
 const AzureSearchClient = require('./lib/azuresearchclient');
+const QnAClient = require('./lib/qnaclient');
 global.attachments = require('./lib/attachments');
 
 // Environment variables
@@ -17,6 +18,9 @@ const BOTBUILDER_APP_ID = process.env.BOTBUILDER_APP_ID;
 const BOTBUILDER_APP_PASSWORD = process.env.BOTBUILDER_APP_PASSWORD;
 const LUIS_MODEL = process.env.LUIS_MODEL;
 const AZURE_SEARCH_KEY = process.env.AZURE_SEARCH_KEY
+const KB_ID = process.env.KB_ID;
+const QNA_KEY = process.env.QNA_KEY;
+const QNA_URL = process.env.QNA_URL;
 
 // Check to see if the environment has been set.
 if (!(BOTBUILDER_APP_ID &&
@@ -29,6 +33,12 @@ if (!(BOTBUILDER_APP_ID &&
 // Search the web for results.
 global.azureSearchClient = new AzureSearchClient({
    azureSearchKey: AZURE_SEARCH_KEY
+});
+
+global.qnaClient = new QnAClient({
+    
+    knowledgeBaseId: KB_ID,
+    subscriptionKey: QNA_KEY
 });
 
 // Setup Restify Server
@@ -141,3 +151,4 @@ global.fetchAzureSearchResults = async (query) => {
 
 // Dialogs
 require('./dialogs/search')();
+require('./dialogs/smalltalk')();
