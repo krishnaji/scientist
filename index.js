@@ -6,8 +6,9 @@ global.request = require('request-promise');
 var os = require('os');
 var inMemoryStorage = new builder.MemoryBotStorage();
 require('dotenv').config()
+var azure = require('botbuilder-azure');
 
-// Cognitive Service Clients.
+// Service Clients.
 
 const AzureSearchClient = require('./lib/azuresearchclient');
 const QnAClient = require('./lib/qnaclient');
@@ -21,6 +22,10 @@ const AZURE_SEARCH_KEY = process.env.AZURE_SEARCH_KEY
 const KB_ID = process.env.KB_ID;
 const QNA_KEY = process.env.QNA_KEY;
 const QNA_URL = process.env.QNA_URL;
+const TABLE_NAME = process.env.TABLE_NAME; 
+const STORAGE_NAME = process.env.STORAGE_NAME;
+const STORAGE_KEY =  process.env.STORAGE_KEY;
+
 
 // Check to see if the environment has been set.
 if (!(BOTBUILDER_APP_ID &&
@@ -41,6 +46,10 @@ global.qnaClient = new QnAClient({
     subscriptionKey: QNA_KEY
 });
 
+//Storage Client
+var azureTableClient = new azure.AzureTableClient(TABLE_NAME, STORAGE_NAME, STORAGE_KEY);
+var tableStorage = new azure.AzureBotStorage({gzipData: false}, azureTableClient);
+ 
 // Setup Restify Server
 const server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, () => {
@@ -64,7 +73,16 @@ const recognizer = new builder.LuisRecognizer(LUIS_MODEL);
 // Create our bot to listen in on the chat connector.
 global.bot = new builder.UniversalBot(connector, (session) => {
     session.beginDialog('scibot:search')
-}).set('storage', inMemoryStorage);;
+    
+     // capture session user information
+    session.userData = {"userId": session.message.user.id};
+
+     // capture conversation information  
+     session.conversationData[timestamp.toISOString().replace(/:/g,"-")] = session.message.text;
+
+     // save data
+     session.save();
+}).set('storage', tableStorage);;
 
 bot.recognizer(recognizer);
 
