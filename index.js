@@ -22,9 +22,10 @@ const AZURE_SEARCH_KEY = process.env.AZURE_SEARCH_KEY
 const KB_ID = process.env.KB_ID;
 const QNA_KEY = process.env.QNA_KEY;
 const QNA_URL = process.env.QNA_URL;
-const TABLE_NAME = process.env.TABLE_NAME; 
-const STORAGE_NAME = process.env.STORAGE_NAME;
-const STORAGE_KEY =  process.env.STORAGE_KEY;
+const COSMOS_DB_HOST = process.env.COSMOS_DB_HOST; 
+const COSMOS_DB_KEY = process.env.COSMOS_DB_KEY;
+const COSMOS_DB_NAME =  process.env.COSMOS_DB_NAME;
+const COSMOS_DB_COLLECTION=  process.env.COSMOS_DB_COLLECTION;
 
 
 // Check to see if the environment has been set.
@@ -47,8 +48,8 @@ global.qnaClient = new QnAClient({
 });
 
 //Storage Client
-var azureTableClient = new azure.AzureTableClient(TABLE_NAME, STORAGE_NAME, STORAGE_KEY);
-var tableStorage = new azure.AzureBotStorage({gzipData: false}, azureTableClient);
+var azureCosmosDBClient = new azure.DocumentDbClient({host:COSMOS_DB_HOST,masterKey:COSMOS_DB_KEY,database:COSMOS_DB_NAME,collection:COSMOS_DB_COLLECTION});
+var cosmosStorage  = new azure.AzureBotStorage({gzipData: false}, azureCosmosDBClient);
  
 // Setup Restify Server
 const server = restify.createServer();
@@ -72,17 +73,8 @@ const recognizer = new builder.LuisRecognizer(LUIS_MODEL);
 
 // Create our bot to listen in on the chat connector.
 global.bot = new builder.UniversalBot(connector, (session) => {
-    session.beginDialog('scibot:search')
-    
-     // capture session user information
-    session.userData = {"userId": session.message.user.id};
-
-     // capture conversation information  
-     session.conversationData[timestamp.toISOString().replace(/:/g,"-")] = session.message.text;
-
-     // save data
-     session.save();
-}).set('storage', tableStorage);;
+    session.beginDialog('scibot:search');
+}).set('storage', cosmosStorage );;
 
 bot.recognizer(recognizer);
 
